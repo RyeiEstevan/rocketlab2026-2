@@ -30,7 +30,8 @@ class MovieDetailresponse(MovieResponse):
     sinopse: Optional[str]
     status_filme: Optional[str]
     reviews: List[ReviewResponse] = []
-
+    media_avaliacoes: Optional[float] = None
+    
 #define the format to create a review
 class ReviewCreate(BaseModel):
     nome: str

@@ -48,11 +48,18 @@ async def get_movie_detail(movie_id: str, db: AsyncSession = Depends(get_db)):
     
     result = await db.scalars(query)
     movie = result.first()
+
     #if the movie doesnt exists, return an error 404(Not Found)
     if not movie:
         raise HTTPException(status_code=404, detail="Filme não encontrado")
     
-    #return the movie
+    #calculate the average avaliation
+    if movie.reviews:
+        soma_notas = sum(review.nota for review in movie.reviews)
+        movie.media_avaliacoes = round(soma_notas/len(movie.reviews), 1)
+    else:
+        movie.media_avaliacoes = None
+    
     return movie
 #---------------------------------POST----------------------------------
 @router.post("/{movie_id}/reviews", response_model=ReviewResponse)
