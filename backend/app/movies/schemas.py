@@ -10,7 +10,7 @@ class MovieResponse(BaseModel):
     url_poster: Optional[str]
 
     #Tells to Pydantic where to read the data
-    class config:
+    class Config:
         from_attributes = True
 
 #Define the content of a review to show
@@ -21,7 +21,7 @@ class ReviewResponse(BaseModel):
     comentario: str
     created_at: datetime
 
-    class config:
+    class Config:
         from_attributes = True
 
 #get more details about the movie chosen
@@ -46,3 +46,11 @@ class MovieUpdate(BaseModel):
     status_filme: Optional[str] = None
     ano_lancamento: Optional[int] = None
     duracao_minutos: Optional[int] = None
+
+class MovieCreate(BaseModel):
+    titulo: str = Field(..., min_length=1, max_length=255)
+    sinopse: Optional[str] = None
+    status_filme: Optional[str] = None
+    ano_lancamento: Optional[int] = Field(None, ge=1888, le=2100)
+    duracao_minutos: Optional[int] = Field(None, gt=0)
+    url_poster: Optional[str] = None
