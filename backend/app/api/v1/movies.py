@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from typing import List
+from typing import List, Optional
 
 from app.movies.models import DimMovie, MovieReview
 from app.movies.schemas import MovieResponse, MovieDetailresponse, ReviewCreate, ReviewResponse
@@ -13,9 +13,21 @@ from app.db.session import get_db
 router = APIRouter(prefix="/movies", tags=["Movies"])
 
 @router.get("/", response_model=List[MovieResponse])
-async def get_movies(skip: int = 0, limit: int = 20, db: AsyncSession = Depends(get_db)):
-    #define the query, having offset and limit to handle pagination
-    query =select(DimMovie).offset(skip).limit(limit)
+async def get_movies(
+    skip: int = 0, 
+    limit: int = 20,
+    titulo: Optional[str] = None,
+    db: AsyncSession = Depends(get_db)
+):
+    #start with a base query
+    query = select(DimMovie)
+
+    #if exist, apply the filter with the title
+    if titulo:
+        query = query.where(DimMovie.titulo.ilike(f"%{titulo}%"))
+    
+    #apply the pagination format
+    query = query.offset(skip).limit(limit)
 
     #Await the execution of the query
     result = await db.scalars(query)
