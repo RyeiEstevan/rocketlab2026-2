@@ -182,3 +182,10 @@
     border-right-color: var(--border);
   }
 }
+
+.modal-box h1,
+.modal-box h2,
+.modal-box h3,
+.modal-box h4 {
+  color: #333;
+}
