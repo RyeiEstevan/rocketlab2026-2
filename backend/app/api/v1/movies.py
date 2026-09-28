@@ -91,7 +91,7 @@ async def create_movie_review(movie_id: str, review: ReviewCreate, db: AsyncSess
 
 @router.post("/", response_model=MovieResponse, status_code=201)
 async def create_movie(movie: MovieCreate, db: AsyncSession = Depends(get_db)):
-    # O título é obrigatório, então não precisa mais do "if movie.titulo"
+    
     query = select(DimMovie).where(DimMovie.titulo == movie.titulo)
     existing_movie = (await db.scalars(query)).first()
 
