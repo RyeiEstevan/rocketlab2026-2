@@ -11,3 +11,9 @@ class MovieResponse(BaseModel):
     #Tells to Pydantic where to read the data
     class config:
         from_attributes = True
+
+#get more details about the movie chosen
+class MovieDetailresponse(MovieResponse):
+    duracao_minutos: Optional[int]
+    sinopse: Optional[str]
+    status_filme: Optional[str]
