@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime
 
@@ -30,3 +30,9 @@ class MovieDetailresponse(MovieResponse):
     sinopse: Optional[str]
     status_filme: Optional[str]
     reviews: List[ReviewResponse] = []
+
+class ReviewCreate(BaseModel):
+    nome: str
+    #insure the right format of nota
+    nota: float = Field(..., ge=0, le=10, description="Noda de 0 a 10")
+    comentario: str

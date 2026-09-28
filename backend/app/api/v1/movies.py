@@ -5,10 +5,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from typing import List
 
-from app.movies.models import DimMovie
-from app.movies.schemas import MovieResponse
-from app.movies.schemas import MovieDetailresponse
+from app.movies.models import DimMovie, MovieReview
+from app.movies.schemas import MovieResponse, MovieDetailresponse, ReviewCreate, ReviewResponse
+
 from app.db.session import get_db
+
 router = APIRouter(prefix="/movies", tags=["Movies"])
 
 @router.get("/", response_model=List[MovieResponse])
@@ -34,9 +35,34 @@ async def get_movie_detail(movie_id: str, db: AsyncSession = Depends(get_db)):
     
     result = await db.scalars(query)
     movie = result.first()
-    #if the movie doesnt exist, return an error 404(Not Found)
+    #if the movie doesnt exists, return an error 404(Not Found)
     if not movie:
         raise HTTPException(status_code=404, detail="Filme não encontrado")
     
     #return the movie
     return movie
+
+@router.post("/{movie_id}/reviews", response_model=ReviewResponse)
+async def create_movie_review(movie_id: str, review: ReviewCreate, db: AsyncSession = Depends(get_db)):
+    #First, check if the movie exists
+    query = select(DimMovie).where(DimMovie.sk_movie_id == movie_id)
+    result = await db.scalars(query)
+    movie = result.first()
+
+    if not movie:
+        raise HTTPException(status_code=404, detail="Filme não encontrado")
+    
+    #create the new review object
+    new_review = MovieReview(
+        sk_movie_id=movie_id,
+        nome=review.nome,
+        nota=review.nota,
+        comentario=review.comentario
+    )
+
+    #load it to the db
+    db.add(new_review)
+    await db.commit()
+    await db.refresh(new_review)
+
+    return new_review
