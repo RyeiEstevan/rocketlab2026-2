@@ -13,7 +13,7 @@ class MovieResponse(BaseModel):
     class config:
         from_attributes = True
 
-#Define the content of a review
+#Define the content of a review to show
 class ReviewResponse(BaseModel):
     sk_movie_review_id: str
     nome: str
@@ -31,8 +31,15 @@ class MovieDetailresponse(MovieResponse):
     status_filme: Optional[str]
     reviews: List[ReviewResponse] = []
 
+#define the format to create a review
 class ReviewCreate(BaseModel):
     nome: str
     #insure the right format of nota
     nota: float = Field(..., ge=0, le=10, description="Noda de 0 a 10")
     comentario: str
+
+
+class MovieUpdate(BaseModel):
+    titulo: Optional[str] = None
+    sinopse: Optional[str] = None
+    status_filme: Optional[str] = None

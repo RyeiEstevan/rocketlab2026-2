@@ -6,12 +6,13 @@ from sqlalchemy.orm import selectinload
 from typing import List, Optional
 
 from app.movies.models import DimMovie, MovieReview
-from app.movies.schemas import MovieResponse, MovieDetailresponse, ReviewCreate, ReviewResponse
+from app.movies.schemas import MovieResponse, MovieDetailresponse, ReviewCreate, ReviewResponse, MovieUpdate
 
 from app.db.session import get_db
 
 router = APIRouter(prefix="/movies", tags=["Movies"])
 
+#---------------------------------GET----------------------------------
 @router.get("/", response_model=List[MovieResponse])
 async def get_movies(
     skip: int = 0, 
@@ -53,7 +54,7 @@ async def get_movie_detail(movie_id: str, db: AsyncSession = Depends(get_db)):
     
     #return the movie
     return movie
-
+#---------------------------------POST----------------------------------
 @router.post("/{movie_id}/reviews", response_model=ReviewResponse)
 async def create_movie_review(movie_id: str, review: ReviewCreate, db: AsyncSession = Depends(get_db)):
     #First, check if the movie exists
@@ -78,3 +79,35 @@ async def create_movie_review(movie_id: str, review: ReviewCreate, db: AsyncSess
     await db.refresh(new_review)
 
     return new_review
+#---------------------------------PATCH----------------------------------
+@router.patch("/{movie_id}", response_model=MovieDetailresponse)
+async def update_movie(movie_id: str, movie_update: MovieUpdate, db: AsyncSession = Depends(get_db)):
+    # We use selectinload to return the full details (with reviews) after updating
+    query = select(DimMovie).options(selectinload(DimMovie.reviews)).where(DimMovie.sk_movie_id == movie_id)
+    result = await db.scalars(query)
+    movie = result.first()
+
+    if not movie:
+        raise HTTPException(status_code=404, detail="Filme não encontrado")
+    
+    #Update only the required fields in the request
+    update_data = movie_update.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(movie, key, value)
+    await db.commit()
+    await db.refresh(movie)
+    return movie
+
+#---------------------------------DELETE----------------------------------
+@router.delete("/{movie_id}")
+async def delete_movie(movie_id: str, db: AsyncSession = Depends(get_db)):
+    query = select(DimMovie).where(DimMovie.sk_movie_id == movie_id)
+    result = await db.scalars(query)
+    movie = result.first()
+
+    if not movie:
+        raise HTTPException(statis_code=404, detail="Filme não encontrado")
+    
+    await db.delete(movie)
+    await db.commit()
+    return {"message": "Filme removido com sucesso"}
