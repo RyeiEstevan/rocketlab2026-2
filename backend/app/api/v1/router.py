@@ -1,6 +1,7 @@
 from fastapi import APIRouter
-
+from app.api.v1 import movies
 api_router = APIRouter()
 
-# Registre aqui os routers dos futuros domínios. Exemplo:
-# api_router.include_router(movies_router, prefix="/movies", tags=["movies"])
+#all the routes will be displayed here
+
+api_router.include_router(movies.router)
