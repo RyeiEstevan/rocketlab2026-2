@@ -11,9 +11,9 @@ from app.db.session import get_db
 router = APIRouter(prefix="/movies", tags=["Movies"])
 
 @router.get("/", response_model=List[MovieResponse])
-async def get_movies(db: AsyncSession = Depends(get_db)):
-    #define the query
-    query =select(DimMovie).limit(50)
+async def get_movies(skip: int = 0, limit: int = 20, db: AsyncSession = Depends(get_db)):
+    #define the query, having offset and limit to handle pagination
+    query =select(DimMovie).offset(skip).limit(limit)
 
     #Await the execution of the query
     result = await db.scalars(query)
