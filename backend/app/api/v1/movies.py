@@ -1,3 +1,4 @@
+import uuid
 from fastapi import APIRouter, Depends
 from fastapi import HTTPException
 from sqlalchemy import select
@@ -86,6 +87,40 @@ async def create_movie_review(movie_id: str, review: ReviewCreate, db: AsyncSess
     await db.refresh(new_review)
 
     return new_review
+
+
+@router.post("/", response_model=MovieResponse)
+async def create_movie(movie: MovieUpdate, db: AsyncSession = Depends(get_db)):
+    # 1. Verifica se já existe um filme com o mesmo título no banco de dados
+    if movie.titulo:
+        query = select(DimMovie).where(DimMovie.titulo == movie.titulo)
+        result = await db.scalars(query)
+        existing_movie = result.first()
+
+        if existing_movie:
+            raise HTTPException(
+                status_code=400, 
+                detail="Já existe um filme com este título no catálogo."
+            )
+
+    # 2. Se não existir, gera o ID e cadastra o filme novo
+    new_id = str(uuid.uuid4())
+    
+    # Desempacota os dados enviados pelo frontend
+    movie_data = movie.model_dump(exclude_unset=True)
+    
+    new_movie = DimMovie(
+        sk_movie_id=new_id,
+        id_filme=new_id, 
+        **movie_data
+    )
+    
+    db.add(new_movie)
+    await db.commit()
+    await db.refresh(new_movie)
+    
+    return new_movie
+
 #---------------------------------PATCH----------------------------------
 @router.patch("/{movie_id}", response_model=MovieDetailresponse)
 async def update_movie(movie_id: str, movie_update: MovieUpdate, db: AsyncSession = Depends(get_db)):
@@ -101,6 +136,7 @@ async def update_movie(movie_id: str, movie_update: MovieUpdate, db: AsyncSessio
     update_data = movie_update.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(movie, key, value)
+
     await db.commit()
     await db.refresh(movie)
     return movie
