@@ -1,72 +1,126 @@
-# RocketLab 2026.2 — repositório base
+# 🎬 Catálogo de Filmes Full-Stack
 
-Base inicial para evoluir a atividade do RocketLab 2026.2. Ela preserva a organização do backend,
-o modelo relacional do catálogo de filmes em SQLAlchemy 2.0 e o histórico de
-migrações com Alembic, sem incluir interface, dados CSV, endpoints de negócio
-ou rotinas de carga.
+Aplicação web full-stack desenvolvida para a gestão de um catálogo de filmes, permitindo listar, pesquisar, visualizar detalhes, criar, atualizar e eliminar registos, além de gerir avaliações associadas.
 
-> **Nota:** `RocketLab` é apenas o nome de referência desta base. O diretório,
-> nome do pacote, título da API e arquivo do banco podem ser renomeados para o
-> que preferirem; eles não representam uma exigência da
-> estrutura-base.
+---
 
-## Estrutura
+## 🚀 Tecnologias Utilizadas
+
+### **Backend**
+* **Python 3.12+**
+* **FastAPI** (Framework web assíncrono)
+* **SQLAlchemy (Async)** (ORM para gestão da base de dados)
+* **SQLite & Aiosqlite** (Base de dados relacional leve)
+* **Alembic** (Gestão de migrações)
+
+### **Frontend**
+* **React** com **TypeScript**
+* **Vite** (Empacotador e servidor de desenvolvimento)
+* **Axios** (Cliente HTTP para comunicação com a API)
+
+---
+
+## ✨ Funcionalidades
+
+* **Listagem e Paginação:** Visualização dos filmes em grelha com paginação otimizada.
+* **Pesquisa por Título:** Filtragem dinâmica de filmes em tempo real.
+* **Detalhes Completos:** Visualização de sinopse, estado, duração, média calculada de avaliações e lista de comentários.
+* **CRUD Completo:**
+  * **Criar:** Adição de novos filmes (com validação de títulos duplicados) e novas avaliações (notas de 0 a 10).
+  * **Atualizar:** Edição de dados do filme via painel de detalhes (`PATCH`).
+  * **Eliminar:** Remoção de filmes do catálogo.
+
+---
+
+## 📂 Estrutura do Projeto
 
 ```text
 .
 ├── backend/
+│   ├── alembic/              # Migrações da base de dados
 │   ├── app/
-│   │   ├── api/v1/        # ponto de composição dos futuros routers
-│   │   ├── core/          # configurações e logging
-│   │   ├── db/            # Base ORM, engine e sessões
-│   │   └── movies/        # modelos SQLAlchemy do domínio de filmes
-│   ├── migrations/        # ambiente e revisões Alembic
-│   └── tests/
-└── README.md
-```
+│   │   ├── api/v1/           # Rotas da API (filmes, etc.)
+│   │   ├── db/               # Sessão e configuração da BD
+│   │   ├── movies/           # Modelos e schemas Pydantic
+│   │   └── main.py           # Ponto de entrada do FastAPI
+│   ├── load_data.py          # Script de população inicial de filmes
+│   ├── load_reviews.py       # Script de população inicial de avaliações
+│   └── requirements.txt      # Dependências Python
+│
+└── frontend/
+    ├── src/
+    │   ├── components/       # Componentes visuais modularizados (Cards, Modals, etc.)
+    |   ├── hooks/            # Lógica do App
+    │   ├── services/         # Configuração do Axios
+    │   ├── types/            # Tipagens TypeScript
+    │   ├── App.tsx           # Componente principal
+    │   └── main.tsx          # Ponto de entrada do React
+    └── package.json          # Dependências Node.js
 
-## Execução
+# 🛠️ Guia de Instalação e Execução
 
-Requer Python 3.11 ou superior.
+Certifica-te de que tens o **Python** e o **Node.js** instalados no teu sistema.
 
-```bash
-cd backend
-python3 -m venv .venv
-.venv/bin/pip install -e ".[dev]"
-cp .env.example .env
-.venv/bin/alembic upgrade head
-.venv/bin/uvicorn app.main:app --reload
-```
+## 1. Configurar e Executar o Backend
 
-A API mínima ficará disponível em `http://localhost:8000`; use
-`http://localhost:8000/docs` para a documentação automática. O endpoint
-`GET /health` permite conferir se a aplicação iniciou corretamente.
-
-## Banco de dados e migrações
-
-O modelo usa um esquema estrela para o catálogo de filmes:
-
-- dimensões de filmes, gêneros, pessoas, produtoras e resumo de avaliações;
-- fato de desempenho financeiro e de engajamento;
-- tabelas de associação N:N entre filmes, gêneros, produtoras e pessoas;
-
-O schema corresponde aos nove arquivos CSV atuais da camada Diamond, com a
-adição de `movie_reviews`: uma avaliação individual por linha, na escala 0–10.
-A tabela aceita diretamente as colunas `sk_movie_review_id`, `sk_movie_id`,
-`nome`, `nota` e `comentario` do CSV enviado separadamente. `created_at` é
-gerado pelo banco. O contexto generativo não faz parte desta base.
-
-O repositório não inclui CSVs nem rotinas de carga. Para usar avaliações,
-importe primeiro os filmes em `dim_movies` e depois o CSV de `movie_reviews`.
-
-As tabelas são criadas exclusivamente pelo Alembic. Para evoluir os modelos,
-crie uma revisão e aplique-a:
+1. Abre um terminal e navega para a pasta do backend:
 
 ```bash
-cd backend
-.venv/bin/alembic revision --autogenerate -m "descreva a alteração"
-.venv/bin/alembic upgrade head
+   cd backend
 ```
 
-O banco padrão é SQLite local em `backend/rocketlab.db`. Ajuste
-`DATABASE_URL` no arquivo `.env` para usar outro banco compatível.
+2. Cria e ativa o ambiente virtual:
+
+```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+```
+
+3. Instala as dependências necessárias:
+
+```bash
+   pip install -r requirements.txt
+```
+
+4. Executa as migrações do Alembic para estruturar a base de dados:
+
+```bash
+   alembic upgrade head
+```
+
+5. Popula a base de dados com os dados iniciais dos CSVs:
+
+```bash
+   python load_data.py
+   python load_reviews.py
+```
+
+6. Inicia o servidor backend com o Uvicorn:
+
+```bash
+   uvicorn app.main:app --reload
+```
+
+O servidor da API estará ativo em `http://127.0.0.1:8000`. Podes aceder a `http://127.0.0.1:8000/docs` para ver a documentação interativa do Swagger.
+
+## 2. Configurar e Executar o Frontend
+
+1. Abre um **novo terminal** e navega para a pasta do frontend:
+
+```bash
+   cd frontend
+```
+
+2. Instala as dependências do projeto:
+
+```bash
+   npm install
+```
+
+3. Inicia o ambiente de desenvolvimento do Vite:
+
+```bash
+   npm run dev
+```
+
+A aplicação web estará acessível no teu browser através de `http://localhost:5173`.
